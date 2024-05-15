@@ -1,10 +1,15 @@
 use crate::{
-    contract::query::{get_count, get_price},
-    msg::{ExecuteMsg, HelloResp, InstantiateMsg, QueryMsg},
+    contract::{
+        execute::{increment, reset},
+        query::get_count,
+        query::get_price,
+    },
+    error::ContractError,
+    msgs::{ExecuteMsg, HelloResp, InstantiateMsg, QueryMsg},
     state::{State, COUNT},
 };
 use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-use cw_ownable::{get_ownership, update_ownership, OwnershipError};
+use cw_ownable::get_ownership;
 
 pub fn instantiate(
     deps: DepsMut,
@@ -13,7 +18,6 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.clone().as_str()))?;
-
     let state = State { count: msg.count };
     COUNT.save(deps.storage, &state)?;
 
@@ -39,7 +43,7 @@ mod query {
 
     use nibiru_std::proto::{nibiru::oracle::QueryExchangeRateRequest, NibiruStargateQuery};
 
-    use crate::msg::{GetCountResp, GetPriceResp};
+    use crate::msgs::{GetCountResp, GetPriceResp};
 
     pub fn hello_world() -> StdResult<HelloResp> {
         let response = HelloResp {
@@ -68,17 +72,46 @@ mod query {
 
 pub fn execute(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, OwnershipError> {
+) -> Result<Response, ContractError> {
     use ExecuteMsg::*;
 
     match msg {
-        UpdateOwnership(action) => {
-            update_ownership(deps, &env.block, &info.sender, action)?;
-        }
-        _ => unimplemented!(),
+        Increment {} => increment(deps, info),
+        Reset { count } => reset(deps, info, count),
     }
-    Ok(Response::new())
+}
+
+mod execute {
+    use super::*;
+    pub fn increment(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+        // Load the current state
+        let mut state = COUNT.load(deps.storage)?;
+
+        // Increment the count by 1 (you can adjust this logic as needed)
+        state.count += 1;
+
+        // Save the updated state
+        COUNT.save(deps.storage, &state)?;
+
+        Ok(Response::new()
+            .add_attribute("method", "increment")
+            .add_attribute("owner", info.sender)
+            .add_attribute("count", state.count.to_string()))
+    }
+
+    pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
+        // Create a new state with the specified count
+        let state = State { count };
+
+        // Save the new state
+        COUNT.save(deps.storage, &state)?;
+
+        Ok(Response::new()
+            .add_attribute("method", "reset")
+            .add_attribute("caller", info.sender)
+            .add_attribute("count", count.to_string()))
+    }
 }

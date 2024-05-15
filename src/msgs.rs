@@ -1,6 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cw_ownable::{cw_ownable_execute, cw_ownable_query};
-use serde::{Deserialize, Serialize};
+use cw_ownable::cw_ownable_query;
 
 #[cw_ownable_query]
 #[cw_serde]
@@ -14,26 +13,28 @@ pub enum QueryMsg {
     GetCount {},
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[cw_serde]
 pub struct HelloResp {
     pub greeting: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[cw_serde]
 pub struct GetPriceResp {
     pub exchange_rate: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[cw_serde]
 pub struct GetCountResp {
     pub count: i32,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub count: i32,
 }
 
-#[cw_ownable_execute]
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    Increment {},
+    Reset { count: i32 },
+}

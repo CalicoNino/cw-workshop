@@ -1,10 +1,13 @@
-use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-use cw_ownable::OwnershipError;
-use msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cosmwasm_std::{
+    entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
+// use cw_ownable::OwnershipError;
+use error::ContractError;
+use msgs::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 mod contract;
 mod error;
-mod msg;
+pub mod msgs;
 mod state;
 
 #[entry_point]
@@ -28,6 +31,6 @@ pub fn execute(
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, OwnershipError> {
+) -> Result<Response, ContractError> {
     contract::execute(deps, env, info, msg)
 }
