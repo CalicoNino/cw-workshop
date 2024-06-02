@@ -18,6 +18,7 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.clone().as_str()))?;
+
     let state = State { count: msg.count };
     COUNT.save(deps.storage, &state)?;
 
