@@ -22,9 +22,20 @@ pub fn instantiate(
     let state = State { count: msg.count };
     COUNT.save(deps.storage, &state)?;
 
+    let funds_attribute = if info.funds.is_empty() {
+        "none".to_string()
+    } else {
+        info.funds
+            .iter()
+            .map(|coin| format!("{}:{}", coin.denom, coin.amount))
+            .collect::<Vec<String>>()
+            .join(", ")
+    };
+
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("owner", info.sender)
+        .add_attribute("funds", funds_attribute)
         .add_attribute("count", msg.count.to_string()))
 }
 
@@ -97,9 +108,20 @@ mod execute {
         // Save the updated state
         COUNT.save(deps.storage, &state)?;
 
+        let funds_attribute = if info.funds.is_empty() {
+            "none".to_string()
+        } else {
+            info.funds
+                .iter()
+                .map(|coin| format!("{}:{}", coin.denom, coin.amount))
+                .collect::<Vec<String>>()
+                .join(", ")
+        };
+
         Ok(Response::new()
             .add_attribute("method", "increment")
             .add_attribute("owner", info.sender)
+            .add_attribute("funds", funds_attribute)
             .add_attribute("count", state.count.to_string()))
     }
 
